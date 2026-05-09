@@ -8,6 +8,7 @@ import { FireflySystem } from "./FireflySystem";
 import { FirstPersonView } from "./FirstPersonView";
 import { InteractionSystem } from "./InteractionSystem";
 import { Materials } from "./Materials";
+import { RemotePhotorealAssets } from "./RemotePhotorealAssets";
 import { createSceneFoundation } from "./SceneFactory";
 
 export class BabylonApp {
@@ -18,6 +19,7 @@ export class BabylonApp {
   private readonly fireflies: FireflySystem;
   private readonly firstPersonView: FirstPersonView;
   private readonly world: World;
+  private readonly remotePhotorealAssets: RemotePhotorealAssets;
   private readonly ticker = new GameTicker();
 
   constructor(canvas: HTMLCanvasElement, private readonly state: GameState) {
@@ -28,6 +30,8 @@ export class BabylonApp {
     const player = new Player(this.scene, materials);
     shadows.addShadowCaster(player.body);
     this.world = new World(this.scene, materials, shadows, state);
+    this.remotePhotorealAssets = new RemotePhotorealAssets(this.scene);
+    void this.remotePhotorealAssets.load();
     this.camera = new CameraController(this.scene, canvas, player);
     this.fireflies = new FireflySystem(this.scene);
     this.firstPersonView = new FirstPersonView(this.scene, this.camera.camera, materials, state);
@@ -48,6 +52,7 @@ export class BabylonApp {
       this.fireflies.update(timeSeconds);
       this.firstPersonView.update(timeSeconds);
       this.world.update(timeSeconds);
+      this.remotePhotorealAssets.update(timeSeconds);
       this.ticker.update(deltaSeconds, this.state);
       this.scene.render();
     });
