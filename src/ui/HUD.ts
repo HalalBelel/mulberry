@@ -1,5 +1,5 @@
 import type { GameState } from "../game/GameState";
-import { renderBuildPanel } from "./buildPanel";
+import { renderActionPanel } from "./actionPanel";
 import { renderCraftingPanel } from "./craftingPanel";
 import { renderLogPanel } from "./logPanel";
 import { renderResourcePanel } from "./resourcePanel";
@@ -10,12 +10,11 @@ interface Visibility {
   inventory: boolean;
   crafting: boolean;
   tech: boolean;
-  build: boolean;
   paused: boolean;
 }
 
 export class HUD {
-  private visibility: Visibility = { inventory: true, crafting: true, tech: false, build: false, paused: false };
+  private visibility: Visibility = { inventory: true, crafting: true, tech: false, paused: false };
 
   constructor(private readonly root: HTMLElement, private readonly state: GameState) {
     window.addEventListener("keydown", (event) => {
@@ -23,7 +22,6 @@ export class HUD {
       if (key === "i") this.toggle("inventory");
       if (key === "c") this.toggle("crafting");
       if (key === "t") this.toggle("tech");
-      if (key === "b") this.toggle("build");
       if (key === "escape") this.toggle("paused");
     });
     state.subscribe(() => this.render());
@@ -41,18 +39,20 @@ export class HUD {
     right.className = "ui-column right";
     right.append(renderSelectedPanel(this.state));
     if (this.visibility.tech) right.append(renderTechTreePanel(this.state));
-    if (this.visibility.build) right.append(renderBuildPanel());
     right.append(renderLogPanel(this.state));
 
     const controls = document.createElement("div");
     controls.className = "controls-help";
-    controls.innerHTML = `<strong>WASD</strong> move · mouse drag/scroll camera · <strong>E</strong> interact · <strong>I/C/T/B</strong> panels · <strong>Esc</strong> pause`;
+    controls.innerHTML = `<strong>Click</strong> lock mouse · <strong>WASD</strong> move/look · <strong>E</strong> interact · <strong>I/C/T</strong> panels · <strong>Esc</strong> release mouse`;
     this.root.append(left, right, controls);
+    const actionPanel = renderActionPanel(this.state);
+    if (actionPanel) this.root.append(actionPanel);
     if (this.visibility.paused) {
       const pause = document.createElement("div");
       pause.className = "pause-card";
       pause.textContent = "Paused / mouse released";
       this.root.append(pause);
+      if (document.pointerLockElement) document.exitPointerLock();
     }
   }
 

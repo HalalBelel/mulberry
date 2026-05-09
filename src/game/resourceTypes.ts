@@ -12,7 +12,7 @@ export type ResourceKey =
 
 export type Inventory = Record<ResourceKey, number>;
 
-export type InteractableType = "mulberry" | "stone" | "clay" | "water";
+export type InteractableType = "mulberry" | "stone" | "clay" | "water" | "firePit";
 
 export interface InteractableDefinition {
   id: string;

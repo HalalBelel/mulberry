@@ -1,4 +1,4 @@
-import { recipes } from "../data/recipes";
+import { recipes, type RecipeId } from "../data/recipes";
 import type { InteractableType } from "./resourceTypes";
 import type { GameState } from "./GameState";
 
@@ -6,6 +6,10 @@ export function gatherSelected(state: GameState): void {
   const selected = state.selected;
   if (!selected || !selected.inRange) {
     state.addLog("Move closer to interact with the selected resource.");
+    return;
+  }
+  if (selected.type === "firePit") {
+    lightFirePit(state);
     return;
   }
   gatherResource(state, selected.type);
@@ -44,6 +48,11 @@ export function gatherResource(state: GameState, type: InteractableType): void {
   state.notify();
 }
 
+export function craftRecipe(state: GameState, recipeId: RecipeId): void {
+  if (recipeId === "bowDrill") craftBowDrill(state);
+  if (recipeId === "firePit") craftFirePit(state);
+}
+
 export function craftBowDrill(state: GameState): void {
   const recipe = recipes.find((item) => item.id === "bowDrill");
   if (!recipe || state.bowDrillUnlocked) return;
@@ -52,7 +61,40 @@ export function craftBowDrill(state: GameState): void {
     return;
   }
   state.bowDrillUnlocked = true;
-  state.addLog("You make a bow drill from mulberry twigs and fibre. Fire is now possible.");
+  state.showVisualAction("craftBowDrill");
+  state.addLog("You carve and string a mulberry bow drill. Fire is now possible.");
+  state.notify();
+}
+
+export function craftFirePit(state: GameState): void {
+  const recipe = recipes.find((item) => item.id === "firePit");
+  if (!recipe || state.firePitBuilt || !state.bowDrillUnlocked) return;
+  if (!state.spend(recipe.costs)) {
+    state.addLog("You need stone, clay, leaves, and twigs to lay out a fire pit.");
+    return;
+  }
+  state.firePitBuilt = true;
+  state.showVisualAction("buildFirePit");
+  state.addLog("You set stones, clay, leaves, and twigs into a small fire pit. Stand near it and press E to use the bow drill.");
+  state.notify();
+}
+
+export function lightFirePit(state: GameState): void {
+  if (!state.firePitBuilt) {
+    state.addLog("Build a fire pit before trying to light one.");
+    return;
+  }
+  if (!state.bowDrillUnlocked) {
+    state.addLog("A bow drill would let you turn dry mulberry wood into flame.");
+    return;
+  }
+  if (state.fireLit) {
+    state.addLog("The small fire is already burning warmly.");
+    return;
+  }
+  state.fireLit = true;
+  state.showVisualAction("lightFire");
+  state.addLog("You kneel with the bow drill. Smoke curls from dry mulberry tinder, then a small hopeful flame catches.");
   state.notify();
 }
 

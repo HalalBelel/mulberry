@@ -4,6 +4,8 @@ import { GameTicker } from "../game/tick";
 import { Player } from "../world/Player";
 import { World } from "../world/World";
 import { CameraController } from "./CameraController";
+import { FireflySystem } from "./FireflySystem";
+import { FirstPersonView } from "./FirstPersonView";
 import { InteractionSystem } from "./InteractionSystem";
 import { Materials } from "./Materials";
 import { createSceneFoundation } from "./SceneFactory";
@@ -13,6 +15,9 @@ export class BabylonApp {
   private readonly scene: Scene;
   private readonly camera: CameraController;
   private readonly interaction: InteractionSystem;
+  private readonly fireflies: FireflySystem;
+  private readonly firstPersonView: FirstPersonView;
+  private readonly world: World;
   private readonly ticker = new GameTicker();
 
   constructor(canvas: HTMLCanvasElement, private readonly state: GameState) {
@@ -22,10 +27,12 @@ export class BabylonApp {
     const shadows = createSceneFoundation(this.scene, materials);
     const player = new Player(this.scene, materials);
     shadows.addShadowCaster(player.body);
-    const world = new World(this.scene, materials, shadows);
+    this.world = new World(this.scene, materials, shadows, state);
     this.camera = new CameraController(this.scene, canvas, player);
+    this.fireflies = new FireflySystem(this.scene);
+    this.firstPersonView = new FirstPersonView(this.scene, this.camera.camera, materials, state);
     this.interaction = new InteractionSystem(state, player, materials);
-    for (const asset of world.assets) {
+    for (const asset of this.world.assets) {
       if (asset.interactable) this.interaction.register(asset.root, asset.interactable, asset.highlightMeshes);
     }
 
@@ -35,8 +42,12 @@ export class BabylonApp {
   start(): void {
     this.engine.runRenderLoop(() => {
       const deltaSeconds = this.engine.getDeltaTime() / 1000;
+      const timeSeconds = performance.now() / 1000;
       this.camera.update(deltaSeconds);
       this.interaction.update();
+      this.fireflies.update(timeSeconds);
+      this.firstPersonView.update(timeSeconds);
+      this.world.update(timeSeconds);
       this.ticker.update(deltaSeconds, this.state);
       this.scene.render();
     });

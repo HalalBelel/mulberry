@@ -28,6 +28,7 @@ export class InteractionSystem {
     let nearest: SelectionState | null = null;
     let nearestSource: RegisteredInteractable | null = null;
     for (const item of this.interactables) {
+      if (!item.root.isEnabled()) continue;
       const distance = Vector3.Distance(this.player.position, item.root.getAbsolutePosition());
       if (!nearest || distance < nearest.distance) {
         nearest = { id: item.id, type: item.type, name: item.name, actionLabel: item.actionLabel, radius: item.radius, distance, inRange: distance <= item.radius };

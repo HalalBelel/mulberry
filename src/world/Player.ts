@@ -11,6 +11,7 @@ export class Player {
     this.root.position = new Vector3(0, 0, -4);
     this.body = MeshBuilder.CreateCapsule("playerBody", { height: 1.8, radius: 0.32 }, scene);
     this.body.material = materials.player;
+    this.body.visibility = 0.16;
     this.body.position.y = 0.9;
     this.body.parent = this.root;
   }

@@ -8,16 +8,22 @@ export interface SelectionState extends InteractableDefinition {
 
 type Listener = () => void;
 
+export type VisualAction = "none" | "craftBowDrill" | "buildFirePit" | "lightFire";
+
 export class GameState {
   public inventory: Inventory = { ...initialInventory };
   public bowDrillUnlocked = false;
+  public firePitBuilt = false;
+  public fireLit = false;
   public selected: SelectionState | null = null;
+  public lastVisualAction: VisualAction = "none";
   public readonly log: string[] = [
     "You wake beside a rainforest river. Wild mulberries bend over the clearing.",
   ];
 
   private listeners = new Set<Listener>();
   private mulberryGatherCount = 0;
+  private visualTimeout: number | undefined;
 
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
@@ -38,6 +44,15 @@ export class GameState {
     this.log.unshift(message);
     this.log.splice(8);
     this.notify();
+  }
+
+  showVisualAction(action: VisualAction): void {
+    this.lastVisualAction = action;
+    if (this.visualTimeout) window.clearTimeout(this.visualTimeout);
+    this.visualTimeout = window.setTimeout(() => {
+      this.lastVisualAction = "none";
+      this.notify();
+    }, 2200);
   }
 
   canAfford(costs: Partial<Record<ResourceKey, number>>): boolean {
