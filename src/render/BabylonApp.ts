@@ -7,6 +7,7 @@ import { CameraController } from "./CameraController";
 import { FireflySystem } from "./FireflySystem";
 import { FirstPersonView } from "./FirstPersonView";
 import { InteractionSystem } from "./InteractionSystem";
+import { AtmosphericEffects } from "./AtmosphericEffects";
 import { Materials } from "./Materials";
 import { RemotePhotorealAssets } from "./RemotePhotorealAssets";
 import { createSceneFoundation } from "./SceneFactory";
@@ -20,19 +21,21 @@ export class BabylonApp {
   private readonly firstPersonView: FirstPersonView;
   private readonly world: World;
   private readonly remotePhotorealAssets: RemotePhotorealAssets;
+  private readonly atmosphere: AtmosphericEffects;
   private readonly ticker = new GameTicker();
 
   constructor(canvas: HTMLCanvasElement, private readonly state: GameState) {
     this.engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, antialias: true });
     this.scene = new Scene(this.engine);
     const materials = new Materials(this.scene);
-    const shadows = createSceneFoundation(this.scene, materials);
+    const foundation = createSceneFoundation(this.scene, materials);
     const player = new Player(this.scene, materials);
-    shadows.addShadowCaster(player.body);
-    this.world = new World(this.scene, materials, shadows, state);
+    foundation.shadows.addShadowCaster(player.body);
+    this.world = new World(this.scene, materials, foundation.shadows, state);
     this.remotePhotorealAssets = new RemotePhotorealAssets(this.scene);
     void this.remotePhotorealAssets.load();
     this.camera = new CameraController(this.scene, canvas, player);
+    this.atmosphere = new AtmosphericEffects(this.scene, this.engine, this.camera.camera, foundation.sun);
     this.fireflies = new FireflySystem(this.scene);
     this.firstPersonView = new FirstPersonView(this.scene, this.camera.camera, materials, state);
     this.interaction = new InteractionSystem(state, player, materials);
@@ -53,6 +56,7 @@ export class BabylonApp {
       this.firstPersonView.update(timeSeconds);
       this.world.update(timeSeconds);
       this.remotePhotorealAssets.update(timeSeconds);
+      this.atmosphere.update(timeSeconds);
       this.ticker.update(deltaSeconds, this.state);
       this.scene.render();
     });

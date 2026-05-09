@@ -1,7 +1,12 @@
 import { Color3, DirectionalLight, HemisphericLight, Mesh, MeshBuilder, Scene, ShadowGenerator, StandardMaterial, Vector3 } from "@babylonjs/core";
 import type { Materials } from "./Materials";
 
-export function createSceneFoundation(scene: Scene, materials: Materials): ShadowGenerator {
+export interface SceneFoundation {
+  shadows: ShadowGenerator;
+  sun: DirectionalLight;
+}
+
+export function createSceneFoundation(scene: Scene, materials: Materials): SceneFoundation {
   scene.clearColor.set(0.015, 0.018, 0.028, 1);
   scene.fogMode = Scene.FOGMODE_EXP2;
   scene.fogColor = new Color3(0.04, 0.08, 0.07);
@@ -52,7 +57,7 @@ export function createSceneFoundation(scene: Scene, materials: Materials): Shado
   for (let i = 0; i < 32; i += 1) createFern(scene, materials, i);
   for (let i = 0; i < 36; i += 1) createStar(scene, i);
 
-  return shadows;
+  return { shadows, sun };
 }
 
 function createGrassClump(scene: Scene, materials: Materials, i: number): void {
