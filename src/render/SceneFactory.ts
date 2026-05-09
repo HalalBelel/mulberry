@@ -1,19 +1,21 @@
-import { Color3, DirectionalLight, HemisphericLight, MeshBuilder, Scene, ShadowGenerator, Vector3 } from "@babylonjs/core";
+import { Color3, DirectionalLight, HemisphericLight, Mesh, MeshBuilder, Scene, ShadowGenerator, StandardMaterial, Vector3 } from "@babylonjs/core";
 import type { Materials } from "./Materials";
 
 export function createSceneFoundation(scene: Scene, materials: Materials): ShadowGenerator {
-  scene.clearColor.set(0.58, 0.76, 0.78, 1);
+  scene.clearColor.set(0.015, 0.018, 0.028, 1);
   scene.fogMode = Scene.FOGMODE_EXP2;
-  scene.fogColor = new Color3(0.56, 0.72, 0.66);
-  scene.fogDensity = 0.015;
+  scene.fogColor = new Color3(0.04, 0.08, 0.07);
+  scene.fogDensity = 0.012;
+  createPainterlyNightSky(scene);
 
   const ambient = new HemisphericLight("forestAmbient", new Vector3(0, 1, 0), scene);
-  ambient.intensity = 0.62;
-  ambient.groundColor = new Color3(0.08, 0.22, 0.12);
+  ambient.intensity = 0.48;
+  ambient.diffuse = new Color3(0.38, 0.52, 0.62);
+  ambient.groundColor = new Color3(0.05, 0.15, 0.09);
 
-  const sun = new DirectionalLight("warmSun", new Vector3(-0.45, -0.9, 0.35), scene);
-  sun.intensity = 1.7;
-  sun.diffuse = new Color3(1, 0.86, 0.58);
+  const sun = new DirectionalLight("warmMoonlitSun", new Vector3(-0.45, -0.9, 0.35), scene);
+  sun.intensity = 1.15;
+  sun.diffuse = new Color3(1, 0.68, 0.32);
   sun.position = new Vector3(14, 24, -12);
   const shadows = new ShadowGenerator(2048, sun);
   shadows.useBlurExponentialShadowMap = true;
@@ -45,9 +47,10 @@ export function createSceneFoundation(scene: Scene, materials: Materials): Shado
   const bankB = bankA.clone("riverBankB");
   if (bankB) bankB.position.x = -27.2;
 
-  for (let i = 0; i < 120; i += 1) createGrassClump(scene, materials, i);
-  for (let i = 0; i < 38; i += 1) createBackgroundTree(scene, materials, shadows, i);
-  for (let i = 0; i < 18; i += 1) createFern(scene, materials, i);
+  for (let i = 0; i < 180; i += 1) createGrassClump(scene, materials, i);
+  for (let i = 0; i < 54; i += 1) createBackgroundTree(scene, materials, shadows, i);
+  for (let i = 0; i < 32; i += 1) createFern(scene, materials, i);
+  for (let i = 0; i < 36; i += 1) createStar(scene, i);
 
   return shadows;
 }
@@ -86,4 +89,39 @@ function createFern(scene: Scene, materials: Materials, i: number): void {
     blade.rotation.x = Math.PI / 2.8;
     blade.rotation.y = (leaf / 5) * Math.PI * 2;
   }
+}
+
+
+function createPainterlyNightSky(scene: Scene): void {
+  const skydome = MeshBuilder.CreateBox("proceduralNightSky", { size: 900, sideOrientation: Mesh.BACKSIDE }, scene);
+  skydome.isPickable = false;
+  const sky = new StandardMaterial("proceduralNightSkyMaterial", scene);
+  sky.diffuseColor = new Color3(0.018, 0.025, 0.05);
+  sky.emissiveColor = new Color3(0.025, 0.04, 0.07);
+  sky.disableLighting = true;
+  skydome.material = sky;
+
+  const horizon = MeshBuilder.CreateCylinder("mistyHorizonBand", { height: 0.08, diameter: 520, tessellation: 96 }, scene);
+  horizon.position.y = 12;
+  horizon.scaling.y = 80;
+  horizon.isPickable = false;
+  const horizonMaterial = new StandardMaterial("mistyHorizonMaterial", scene);
+  horizonMaterial.diffuseColor = new Color3(0.08, 0.18, 0.14);
+  horizonMaterial.emissiveColor = new Color3(0.04, 0.11, 0.09);
+  horizonMaterial.alpha = 0.34;
+  horizonMaterial.disableLighting = true;
+  horizon.material = horizonMaterial;
+}
+
+function createStar(scene: Scene, i: number): void {
+  const star = MeshBuilder.CreateSphere(`softStar${i}`, { diameter: 0.08 + (i % 4) * 0.025, segments: 6 }, scene);
+  const material = new StandardMaterial(`softStarMaterial${i}`, scene);
+  material.emissiveColor = new Color3(0.8, 0.9, 1);
+  material.diffuseColor = new Color3(0.8, 0.9, 1);
+  material.disableLighting = true;
+  star.material = material;
+  const angle = i * 2.399;
+  const radius = 90 + (i % 8) * 12;
+  star.position = new Vector3(Math.cos(angle) * radius, 32 + (i % 7) * 7, Math.sin(angle) * radius);
+  star.isPickable = false;
 }

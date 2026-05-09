@@ -4,6 +4,7 @@ import { GameTicker } from "../game/tick";
 import { Player } from "../world/Player";
 import { World } from "../world/World";
 import { CameraController } from "./CameraController";
+import { FireflySystem } from "./FireflySystem";
 import { FirstPersonView } from "./FirstPersonView";
 import { InteractionSystem } from "./InteractionSystem";
 import { Materials } from "./Materials";
@@ -14,6 +15,7 @@ export class BabylonApp {
   private readonly scene: Scene;
   private readonly camera: CameraController;
   private readonly interaction: InteractionSystem;
+  private readonly fireflies: FireflySystem;
   private readonly firstPersonView: FirstPersonView;
   private readonly world: World;
   private readonly ticker = new GameTicker();
@@ -27,6 +29,7 @@ export class BabylonApp {
     shadows.addShadowCaster(player.body);
     this.world = new World(this.scene, materials, shadows, state);
     this.camera = new CameraController(this.scene, canvas, player);
+    this.fireflies = new FireflySystem(this.scene);
     this.firstPersonView = new FirstPersonView(this.scene, this.camera.camera, materials, state);
     this.interaction = new InteractionSystem(state, player, materials);
     for (const asset of this.world.assets) {
@@ -42,6 +45,7 @@ export class BabylonApp {
       const timeSeconds = performance.now() / 1000;
       this.camera.update(deltaSeconds);
       this.interaction.update();
+      this.fireflies.update(timeSeconds);
       this.firstPersonView.update(timeSeconds);
       this.world.update(timeSeconds);
       this.ticker.update(deltaSeconds, this.state);
